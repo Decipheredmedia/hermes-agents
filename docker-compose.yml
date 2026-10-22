@@ -74,3 +74,72 @@ services:
       - HERMES_GID=${HERMES_GID:-10000}
     # Localhost-only. For remote access, tunnel via `ssh -L 9119:localhost:9119`.
     command: ["dashboard", "--host", "127.0.0.1", "--no-open"]
+
+  instagram-ollama:
+    image: ollama/ollama:latest
+    container_name: instagram-ollama
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - instagram-ollama-data:/root/.ollama
+
+  instagram-backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: instagram-agent-backend
+    restart: unless-stopped
+    depends_on:
+      - instagram-ollama
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      DATABASE_URL: sqlite:////data/instagram.db
+      OLLAMA_HOST: http://instagram-ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-}
+      INSTAGRAM_ACCOUNT: ${INSTAGRAM_ACCOUNT:-}
+      BRAND_NAME: ${BRAND_NAME:-}
+      NICHE: ${NICHE:-}
+      TARGET_AUDIENCE: ${TARGET_AUDIENCE:-}
+      BRAND_VOICE: ${BRAND_VOICE:-}
+      PRIMARY_GOAL: ${PRIMARY_GOAL:-}
+      MONTHLY_BUDGET: ${MONTHLY_BUDGET:-}
+      HOSTING_ENV: ${HOSTING_ENV:-}
+    volumes:
+      - instagram-agent-data:/data
+
+  instagram-n8n:
+    image: n8nio/n8n:latest
+    container_name: instagram-agent-n8n
+    restart: unless-stopped
+    depends_on:
+      - instagram-backend
+    ports:
+      - "127.0.0.1:5678:5678"
+    environment:
+      N8N_HOST: localhost
+      N8N_PROTOCOL: http
+      N8N_PORT: 5678
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:-}
+      N8N_USER: ${N8N_USER:-}
+      N8N_PASSWORD: ${N8N_PASSWORD:-}
+    volumes:
+      - instagram-n8n-data:/home/node/.n8n
+      - ./n8n/content-pipeline.json:/files/content-pipeline.json:ro
+
+  instagram-dashboard:
+    image: nginx:alpine
+    container_name: instagram-agent-dashboard
+    restart: unless-stopped
+    depends_on:
+      - instagram-backend
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ./dashboard:/usr/share/nginx/html:ro
+
+volumes:
+  instagram-agent-data:
+  instagram-ollama-data:
+  instagram-n8n-data:

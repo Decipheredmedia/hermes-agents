@@ -1,0 +1,156 @@
+{
+  "name": "Instagram Stage 1 Content Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "instagram-content-pipeline",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "instagram-pipeline-trigger",
+      "name": "Start content pipeline",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "instagram-content-pipeline"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(({ json }) => ({ json: { ...json, trend_research: { status: 'requires API key / authorized source', opportunities: [] } } }));"
+      },
+      "id": "trend-watcher",
+      "name": "Trend Watcher (authorized sources only)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(({ json }) => ({ json: { ...json, content_plan: { idea: json.body?.idea ?? 'Share one useful idea', audience: json.body?.target_audience ?? 'Audience not configured', pillar: json.body?.content_pillar ?? 'Education' } } }));"
+      },
+      "id": "content-planner",
+      "name": "Content Planner",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [620, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(({ json }) => ({ json: { ...json, hook_candidates: [`A practical idea for ${json.content_plan.audience}:`, `One useful ${json.content_plan.pillar.toLowerCase()} lesson`] } }));"
+      },
+      "id": "hook-extractor",
+      "name": "Hook Extractor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(({ json }) => ({ json: { ...json, virality_review: { note: 'Review clarity, pacing, and audience value; no reach is guaranteed.', hypothesis: 'Test one opening hook against another and compare supplied account metrics.' } } }));"
+      },
+      "id": "virality-engine",
+      "name": "Virality Engine",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [980, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(({ json }) => ({ json: { ...json, draft_brief: json.content_plan.idea, content_format: json.body?.content_format ?? 'post' } }));"
+      },
+      "id": "post-writer-reel-scripter",
+      "name": "Post Writer / Reel Scripter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1160, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(({ json }) => ({ json: { ...json, creative_assets: [], grid_plan: 'Add owner-supplied, rights-cleared assets during review.' } }));"
+      },
+      "id": "grid-planner",
+      "name": "Grid Planner",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://instagram-backend:8000/api/pipeline/run",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { campaign_name: $json.body?.campaign_name ?? 'New campaign', content_pillar: $json.content_plan.pillar, target_audience: $json.content_plan.audience, idea: $json.draft_brief, content_format: $json.content_format, brand_voice: $json.body?.brand_voice ?? '' } }}",
+        "options": {}
+      },
+      "id": "create-review-draft",
+      "name": "Run agents and save draft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1520, 300]
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {}
+      },
+      "id": "human-approval-webhook",
+      "name": "Wait for human approval webhook",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1760, 300],
+      "webhookId": "instagram-content-approval"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://instagram-backend:8000/api/content/{{$node[\"Run agents and save draft\"].json.content_id}}/schedule",
+        "options": {}
+      },
+      "id": "mock-schedule-after-approval",
+      "name": "Schedule (mock; backend enforces approval)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2000, 300]
+    }
+  ],
+  "connections": {
+    "Start content pipeline": {
+      "main": [[{"node": "Trend Watcher (authorized sources only)", "type": "main", "index": 0}]]
+    },
+    "Trend Watcher (authorized sources only)": {
+      "main": [[{"node": "Content Planner", "type": "main", "index": 0}]]
+    },
+    "Content Planner": {
+      "main": [[{"node": "Hook Extractor", "type": "main", "index": 0}]]
+    },
+    "Hook Extractor": {
+      "main": [[{"node": "Virality Engine", "type": "main", "index": 0}]]
+    },
+    "Virality Engine": {
+      "main": [[{"node": "Post Writer / Reel Scripter", "type": "main", "index": 0}]]
+    },
+    "Post Writer / Reel Scripter": {
+      "main": [[{"node": "Grid Planner", "type": "main", "index": 0}]]
+    },
+    "Grid Planner": {
+      "main": [[{"node": "Run agents and save draft", "type": "main", "index": 0}]]
+    },
+    "Run agents and save draft": {
+      "main": [[{"node": "Wait for human approval webhook", "type": "main", "index": 0}]]
+    },
+    "Wait for human approval webhook": {
+      "main": [[{"node": "Schedule (mock; backend enforces approval)", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7ad65914-0bce-4f81-9da9-a5880d73dfc3",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
