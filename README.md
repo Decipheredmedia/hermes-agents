@@ -241,3 +241,14 @@ for activation, daily use, dependency changes, and leaving the environment.
 MIT — see [LICENSE](LICENSE).
 
 Built by [Nous Research](https://nousresearch.com).
+
+## Instagram agent platform (Stage 1)
+
+This repository also contains an isolated Instagram content workflow under `agents/`,
+`orchestrator/`, and `backend/`. Drafting and planning can run locally; a person must approve every
+item before the mock scheduler accepts it. The Instagram integration does not make live API calls.
+Publishing, DMs, and comment actions require an eligible Business account, Meta App review,
+appropriate permissions, and an authorized account; those connections are deliberately deferred.
+
+The agent instruction adaptations acknowledge `Jakeschincariol/instagram-agent-skill` under its
+MIT license; see [NOTICE](NOTICE) and [ARCHITECTURE.md](ARCHITECTURE.md).

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Instagram Agent — Stage 1</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header>
+      <div>
+        <p class="eyebrow">STAGE 1 · MOCK MODE</p>
+        <h1>Instagram content desk</h1>
+        <p class="muted">Drafts stay private until you review them. Scheduling is simulated.</p>
+      </div>
+      <button id="refresh" type="button">Refresh</button>
+    </header>
+    <main>
+      <section class="metrics" aria-label="Analytics overview">
+        <article><span>Content items</span><strong id="metric-count">—</strong></article>
+        <article><span>Pending review</span><strong id="metric-pending">—</strong></article>
+        <article><span>Data source</span><strong id="metric-source">—</strong></article>
+      </section>
+      <section class="panel">
+        <h2>Create a draft</h2>
+        <form id="draft-form">
+          <label>Campaign <input name="campaign_name" maxlength="240" value="New campaign"></label>
+          <label>Content pillar <input name="content_pillar" maxlength="120" value="Education"></label>
+          <label>Target audience <input name="target_audience" maxlength="240" value="Audience not configured"></label>
+          <label>Brand voice <input name="brand_voice" maxlength="240" placeholder="Use configured brand voice"></label>
+          <label>Idea <textarea name="idea" required>Share one useful idea with the audience</textarea></label>
+          <label>Format
+            <select name="content_format"><option value="post">Post</option><option value="reel">Reel</option></select>
+          </label>
+          <button type="submit">Generate review draft</button>
+        </form>
+        <p id="notice" role="status" aria-live="polite"></p>
+      </section>
+      <section class="panel">
+        <h2>Content calendar &amp; approvals</h2>
+        <div id="content-list" class="content-list"></div>
+      </section>
+      <section class="panel two-column">
+        <div><h2>Agent activity</h2><div id="activity"></div></div>
+        <div><h2>Calendar view</h2><div id="calendar"></div></div>
+      </section>
+      <p class="warning">Live publishing, DMs, and comments are not enabled. Real actions require
+        Meta App review, an authorized Business account, and supported permissions.</p>
+    </main>
+    <script src="app.js" defer></script>
+  </body>
+</html>

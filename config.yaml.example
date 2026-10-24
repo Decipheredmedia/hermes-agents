@@ -1,0 +1,24 @@
+instagram:
+  account: ""
+brand:
+  name: ""
+  niche: ""
+  target_audience: ""
+  voice: ""
+  primary_goal: ""
+  monthly_budget: ""
+hosting:
+  environment: ""
+  automation_platform: ""
+inference:
+  provider: ""
+  model: ""
+  host: ""
+meta:
+  app_id: ""
+  app_secret: ""
+  access_token: ""
+n8n:
+  user: ""
+  password: ""
+  encryption_key: ""
