@@ -40,8 +40,12 @@ credentials are supplied. Never use scraping or unofficial endpoints.
 1. Create a local `.env` from `.env.example`, or copy `config.yaml.example` to `config.yaml` and
    fill in only local values. All values begin blank; both local files are ignored by git, and
    `.env` must remain private.
-2. Install backend dependencies with `python -m pip install -r backend/requirements.txt`.
-3. Run `uvicorn backend.app.main:app --reload --env-file .env` from the repository root.
+2. From the repository root, in a shell without Hermes activation, create a separate backend
+   environment with `python -m venv backend/.venv` (use a fresh destination). Install dependencies
+   with `backend/.venv/bin/python -m pip install -r backend/requirements.txt`. Do not install these
+   requirements into a PM-managed Hermes environment.
+3. Run `backend/.venv/bin/python -m uvicorn backend.app.main:app --reload --env-file .env`
+   from the repository root.
 4. Open `http://127.0.0.1:8000/docs`; serve `dashboard/` with
    `python -m http.server 8080 --directory dashboard` for the dashboard.
 5. Set `OLLAMA_HOST` and `OLLAMA_MODEL` to a local authorized Ollama instance/model when using
@@ -55,5 +59,16 @@ credentials are supplied. Never use scraping or unofficial endpoints.
    schedule endpoint remains approval-guarded.
 
 Tests use fake data and mocked Instagram responses; they never require Meta credentials or contact
-Instagram. Install `backend/requirements-test.txt` and run
-`HERMES_PYTHON=<test-interpreter> scripts/run_tests.sh tests/instagram_platform/`.
+Instagram. In the separate backend environment above, run from the repository root:
+
+```bash
+backend/.venv/bin/python -m pip install -r backend/requirements-test.txt
+HERMES_PYTHON="$PWD/backend/.venv/bin/python" scripts/run_tests.sh tests/instagram_platform/ --confcutdir=tests/instagram_platform/
+```
+
+The canonical runner clears credentials and isolates test processes. `--confcutdir` limits fixture
+loading to this standalone platform suite, whose API fixture uses a temporary SQLite database;
+the parent Hermes fixtures import unrelated core dependencies. Keep the normal Hermes fixture
+configuration when testing Hermes itself. `httpx2` is intentional: current Starlette `TestClient`
+uses it through FastAPI. On Windows, use `backend/.venv/Scripts/python.exe` and run the test
+command in Bash.
